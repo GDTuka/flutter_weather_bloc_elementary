@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:elementary_bloc_weather/data/api/repository.dart';
 import 'package:elementary_bloc_weather/data/models/weather_model_current.dart';
@@ -13,8 +15,16 @@ class MainBloc extends Bloc<MainEvents, MainStates> {
   Future<void> _loadWeatherData(LoadWeatherEvent event, Emitter emit) async {
     emit(LoadingState());
     if (await _geoAccsess(emit)) {
-      MainWeather weather = await apiRepository.getWeather();
-      emit(WeatherLoaded(weather));
+      try {
+        MainWeather weather = await apiRepository.getWeather();
+        emit(WeatherLoaded(weather));
+      } on SocketException {
+        emit(ErrorState("Не удалось подключиться к серверу, проверьте ваше интернет подключение"));
+      } on HttpException {
+        emit(ErrorState("Что-то пошло не так при запросе на сервер"));
+      } on FormatException {
+        emit(ErrorState("Что-то пошло не так, проблемы с отправке запроса на сервер: Неправильный формат ввода"));
+      }
     }
   }
 

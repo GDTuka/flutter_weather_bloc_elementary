@@ -25,7 +25,10 @@ class MainScreenWidgetModel extends WidgetModel<MainScreen, MainScreenModel> imp
   final _mainScreenEntityState = EntityStateNotifier<MainWeather>();
 
   late final StreamSubscription<MainStates> _stateStatusSubscription;
-  late final MainWeather weather;
+
+  late MainWeather weather;
+  late String errorMessage = "";
+  late AssetImage mainImage;
   MainScreenWidgetModel({
     required MainScreenModel model,
   }) : super(model);
@@ -48,6 +51,17 @@ class MainScreenWidgetModel extends WidgetModel<MainScreen, MainScreenModel> imp
     if (state is WeatherLoaded) {
       _mainScreenEntityState.content(state.weather);
       weather = state.weather;
+      if (weather.clouds.all > 50) {
+        mainImage = const AssetImage("assets/weatherPic/cloud.png");
+      } else if (weather.clouds.all < 20) {
+        mainImage = const AssetImage("assets/weatherPic/sun.png");
+      } else {
+        mainImage = const AssetImage("assets/weatherPic/sun_and_cloud.png");
+      }
+    }
+    if (state is ErrorState) {
+      _mainScreenEntityState.error();
+      errorMessage = state.error;
     }
   }
 
@@ -57,6 +71,7 @@ class MainScreenWidgetModel extends WidgetModel<MainScreen, MainScreenModel> imp
 
   @override
   void dispose() {
+    _stateStatusSubscription.cancel();
     super.dispose();
   }
 }
